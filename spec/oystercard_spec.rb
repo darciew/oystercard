@@ -1,4 +1,5 @@
 require 'oystercard'
+
 describe Oystercard do
   let(:station) { double :station }
   let(:station2) { double :station2 }
@@ -7,7 +8,9 @@ describe Oystercard do
 
   before(:each) do
     allow(journey_class).to receive(:new).and_return journey_object
-    allow(journey_object).to receive(:end)
+    allow(journey_object).to receive(:enter)
+    allow(journey_object).to receive(:leave)
+    allow(journey_object).to receive(:minimum_fare).and_return(1)
   end
 
   describe 'Initialise' do
@@ -35,7 +38,7 @@ describe Oystercard do
   describe '#touch_in' do
     context 'has enough funds for minimum fare' do
       before(:each) do
-        subject.top_up(Oystercard::MINIMUM_FARE)
+        subject.top_up(subject.current_journey.minimum_fare)
         subject.touch_in(station)
       end
       it 'starts a journey' do
@@ -54,12 +57,11 @@ describe Oystercard do
         expect{subject.touch_in(station)}.to raise_error("Insufficient funds!")
       end
     end
-
   end
 
   describe '#touch_out' do
     before(:each) do
-      @fare = Oystercard::MINIMUM_FARE
+      @fare = subject.current_journey.minimum_fare
       subject.top_up(@fare)
       subject.touch_in(station)
     end
@@ -73,7 +75,7 @@ describe Oystercard do
     end
 
     it 'forgets the entry station' do
-      expect{ subject.touch_out(station2) }.to change{ subject.current_journey }.to be_nil
+      expect{ subject.touch_out(station2) }.to change{ subject.current_journey.entry_station }.to be_nil
     end
 
     it 'creates a journey' do
