@@ -2,6 +2,13 @@ require 'oystercard'
 describe Oystercard do
   let(:station) { double :station }
   let(:station2) { double :station2 }
+  let(:journey_class) { double :journey_class }
+  let(:journey_object) { double :journey_object }
+
+  before(:each) do
+    allow(journey_class).to receive(:new).and_return journey_object
+    allow(journey_object).to receive(:end)
+  end
 
   describe 'Initialise' do
     it 'has balance of 0 when initialised' do
@@ -70,10 +77,11 @@ describe Oystercard do
     end
 
     it 'creates a journey' do
-      subject.touch_out(station2)
-      expect(subject.journeys).to include{subject.journey}
-      #expect(subject.journeys).to include {sation1 and station2}
-      end
+      fake_oyster = Oystercard.new(journey_class)
+      fake_oyster.top_up(10)
+      fake_oyster.touch_in(station)
+      fake_oyster.touch_out(station2)
+      expect(fake_oyster.journeys).to eq [journey_object]
     end
   end
 end
